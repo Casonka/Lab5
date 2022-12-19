@@ -3,3 +3,18 @@ spring.datasource.url: jdbc:h2:file:./camunda-h2-database
 camunda.bpm.admin-user:
   id: admin
   password: admin
+camunda.bpm.client:
+  base-url: http://localhost:8080/engine-rest
+  lock-duration: 10000
+  subscriptions:
+    ServiceReg:
+      variable-names: name
+      process-definition-key: loan_process
+
+logging:
+  level:
+    org:
+      camunda:
+        bpm:
+          client: DEBUG
+
