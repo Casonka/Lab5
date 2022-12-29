@@ -7,13 +7,14 @@ import ru.core.base.Health;
 import ru.core.base.Patient;
 import ru.core.base.Status;
 
+import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  *  Сервис контроля за регистратурой
  */
-@RestController
+@RestController(value = "/registration")
 public class RegistrationController {
 
     private static final List<Patient> RegistrationList = new ArrayList<Patient>();
@@ -33,15 +34,16 @@ public class RegistrationController {
      * @return Если его нет, то добавляет новую запись, если есть, то обновляет статус
      */
     @PostMapping(value="/register")
-    public Patient RegistrationForm(@RequestBody Patient input) {
+    public Response RegistrationForm(@RequestBody Patient input) {
         Patient result = FindPatient(input);
         if(result != null) {
             result.setStatus(input.getStatus());
-            return result;
+            return Response.ok(result.getId()).build();
         }
         RegistrationList.add(input);
         input.setId(RegistrationList.size());
-        return input;
+        input.setStatus(Status.REGISTERED);
+        return Response.ok(input.getId()).build();
     }
 
     /**
@@ -50,19 +52,22 @@ public class RegistrationController {
      * @return Найденный пациент
      */
     @GetMapping(value = "/fetch/{id}")
-    public Patient FetchPatient(@PathVariable String id) {
+    public Response FetchPatient(@PathVariable String id) {
         try {
-            return RegistrationList.get(Integer.parseInt(id));
-        } catch(NullPointerException | NullValueException e) {return null;}
+            return Response.ok(RegistrationList.get(Integer.parseInt(id))).build();
+        } catch(NullPointerException | NullValueException e) {return Response.ok().build();}
     }
 
     @PostMapping(value = "/appointmentLab")
-    public int AppointmentPatientToLab(@RequestBody int id) {
-        if(RegistrationList.get(id).getStatus() == Status.VISITED_DOCTOR && RegistrationList.get(id))
+    public Response AppointmentPatientToLab(@RequestBody int id) {
+        if(RegistrationList.get(id).getStatus() == Status.VISITED_DOCTOR && RegistrationList.get(id).getHealth() == Health.BAD) {
+            RegistrationList.get(id).setStatus(Status.RECEIVED_REFERRAL);
+            return Response.ok(id).build();
+        } else return Response.status(201).entity(-1).build();
     }
 
     @PostMapping(value = "/appointmentDoc")
-    public int AppointmentPatientToDoc(@RequestBody int id) {
+    public Response AppointmentPatientToDoc(@RequestBody int id) {
         try {
             /**
              * Проверка статуса пациента перед записью
@@ -70,7 +75,7 @@ public class RegistrationController {
             if(RegistrationList.get(id).getStatus() == Status.REGISTERED) {
                 // нужно направление к доктору
                 if (RegistrationList.get(id).getDoctor_id() != -1) {
-                    return RegistrationList.get(id).getDoctor_id();
+                    return Response.ok(RegistrationList.get(id).getDoctor_id()).build();
                 }
                 int identificator = -1;
                 if (RegistrationList.get(id).getDoctor_id() == -1) {
@@ -80,9 +85,9 @@ public class RegistrationController {
                         identificator = doc.getId();
                     }
                 }
-                return identificator;
-            } else {RegistrationList.get(id).setStatus(Status.ABORTED);return -1;}
-        } catch(NullPointerException | NullValueException e) {return -1;}
+                return Response.ok(identificator).build();
+            } else {RegistrationList.get(id).setStatus(Status.ABORTED);return Response.status(201).entity(-1).build();}
+        } catch(NullPointerException | NullValueException e) {return Response.status(201).entity(-1).build();}
     }
 
     private Patient FindPatient(Patient patient) {
