@@ -1,12 +1,14 @@
 package ru.core.services;
 
 import org.camunda.bpm.engine.exception.NullValueException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.core.base.Doctor;
 import ru.core.base.Health;
 import ru.core.base.Patient;
-import ru.core.base.Status;
-
+import ru.core.base.Statistic;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,11 +40,12 @@ public class RegistrationController {
         Patient result = FindPatient(input);
         if(result != null) {
             result.setStatus(input.getStatus());
+            RegistrationList.get(result.getId()).setStatus(input.getStatus());
             return Response.ok(result.getId()).build();
         }
+        input.setId(RegistrationList.size() + 1);
+        input.setStatus(Statistic.REGISTERED);
         RegistrationList.add(input);
-        input.setId(RegistrationList.size());
-        input.setStatus(Status.REGISTERED);
         return Response.ok(input.getId()).build();
     }
 
@@ -51,43 +54,44 @@ public class RegistrationController {
      * @param id Уникальный номер пациента
      * @return Найденный пациент
      */
-    @GetMapping(value = "/fetch/{id}")
-    public Response FetchPatient(@PathVariable String id) {
-        try {
-            return Response.ok(RegistrationList.get(Integer.parseInt(id))).build();
-        } catch(NullPointerException | NullValueException e) {return Response.ok().build();}
+    @GetMapping(value = "/fetch/{id}", produces = MediaType.APPLICATION_JSON)
+    public @ResponseBody ResponseEntity<Patient> FetchPatient(@PathVariable String id) {
+        int number = Integer.parseInt(id);
+            return new ResponseEntity<Patient>(RegistrationList.get(number - 1), HttpStatus.OK);
     }
 
     @PostMapping(value = "/appointmentLab")
     public Response AppointmentPatientToLab(@RequestBody int id) {
-        if(RegistrationList.get(id).getStatus() == Status.VISITED_DOCTOR && RegistrationList.get(id).getHealth() == Health.BAD) {
-            RegistrationList.get(id).setStatus(Status.RECEIVED_REFERRAL);
+        if(RegistrationList.get(id).getStatus() == Statistic.VISITED_DOCTOR && RegistrationList.get(id).getHealth() == Health.BAD) {
+            RegistrationList.get(id).setStatus(Statistic.RECEIVED_REFERRAL);
             return Response.ok(id).build();
         } else return Response.status(201).entity(-1).build();
     }
 
-    @PostMapping(value = "/appointmentDoc")
-    public Response AppointmentPatientToDoc(@RequestBody int id) {
+    @PostMapping(value = "/appointmentDoc", consumes = MediaType.APPLICATION_JSON, produces = MediaType.APPLICATION_JSON)
+    public Response AppointmentPatientToDoc(@RequestBody String id) {
         try {
+            int ide = Integer.parseInt(id) - 1;
             /**
              * Проверка статуса пациента перед записью
              */
-            if(RegistrationList.get(id).getStatus() == Status.REGISTERED) {
+            if(RegistrationList.get(ide).getStatus() == Statistic.REGISTERED) {
                 // нужно направление к доктору
-                if (RegistrationList.get(id).getDoctor_id() != -1) {
-                    return Response.ok(RegistrationList.get(id).getDoctor_id()).build();
+                if (RegistrationList.get(ide).getDoctor_id() != -1) {
+                    return Response.ok(RegistrationList.get(ide).getDoctor_id()).build();
                 }
                 int identificator = -1;
-                if (RegistrationList.get(id).getDoctor_id() == -1) {
+                if (RegistrationList.get(ide).getDoctor_id() == -1) {
                     int load = 100;
                     for (Doctor doc : DoctorList) {
                         if (doc.getPatients_counts() < load) load = doc.getPatients_counts();
                         identificator = doc.getId();
                     }
                 }
-                return Response.ok(identificator).build();
-            } else {RegistrationList.get(id).setStatus(Status.ABORTED);return Response.status(201).entity(-1).build();}
-        } catch(NullPointerException | NullValueException e) {return Response.status(201).entity(-1).build();}
+                RegistrationList.get(ide).setDoctor_id(identificator);
+                return Response.ok(String.valueOf(identificator)).build();
+            } else {RegistrationList.get(ide).setStatus(Statistic.ABORTED);return Response.status(201).entity("-1").build();}
+        } catch(NullPointerException | NullValueException e) {return Response.status(201).entity("-1").build();}
     }
 
     private Patient FindPatient(Patient patient) {

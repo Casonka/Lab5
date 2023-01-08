@@ -1,0 +1,46 @@
+{
+  "components": [
+    {
+      "label": "Id Field",
+      "type": "number",
+      "id": "Field_0hbzvli",
+      "key": "id",
+      "defaultValue": -1
+    },
+    {
+      "label": "Name Field",
+      "type": "textfield",
+      "id": "Field_05u06ak",
+      "key": "name"
+    },
+    {
+      "label": "Lastname Field",
+      "type": "textfield",
+      "id": "Field_13kkphe",
+      "key": "lastname"
+    },
+    {
+      "label": "Age Field",
+      "type": "number",
+      "id": "Field_0h4etp6",
+      "key": "age",
+      "defaultValue": -1
+    },
+    {
+      "label": "Status Field",
+      "type": "textfield",
+      "id": "Field_00qwkys",
+      "key": "status",
+      "defaultValue": "NULL"
+    }
+  ],
+  "type": "default",
+  "id": "Register",
+  "exporter": {
+    "name": "Camunda Modeler",
+    "version": "5.6.0"
+  },
+  "executionPlatform": "Camunda Platform",
+  "executionPlatformVersion": "7.18.0",
+  "schemaVersion": 5
+}

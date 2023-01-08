@@ -8,11 +8,11 @@ public class Patient {
 
     public Patient() {}
 
-    public Patient(String name, String lastname, int age, Status status) {
+    public Patient(String name, String lastname, int age, Statistic statistic) {
         this.name = name;
         this.lastname = lastname;
         this.age = age;
-        this.status = status;
+        this.statistic = statistic;
         this.Doctor_id = -1;
         this.id = -1;
     }
@@ -21,7 +21,7 @@ public class Patient {
     private String lastname;
     private int age;
     private int Doctor_id;
-    private Status status;
+    private Statistic statistic;
     private Health health;
 
     @XmlElement
@@ -49,7 +49,7 @@ public class Patient {
     @XmlElement
     public void setDoctor_id(int doctor_id) {Doctor_id = doctor_id;}
     @XmlElement
-    public Status getStatus() {return status;}
+    public Statistic getStatus() {return statistic;}
     @XmlElement
-    public void setStatus(Status status) {this.status = status;}
+    public void setStatus(Statistic statistic) {this.statistic = statistic;}
 }

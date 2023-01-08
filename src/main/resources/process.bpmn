@@ -1,60 +1,69 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:color="http://www.omg.org/spec/BPMN/non-normative/color/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_0fr9mxs" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.6.0">
-  <bpmn:process id="Lab5-process" name="Lab5" isExecutable="true">
+  <bpmn:process id="Lab5-process" name="Lab5" isExecutable="true" camunda:historyTimeToLive="5">
     <bpmn:sequenceFlow id="SequenceFlow_1fp17al" sourceRef="StartEvent" targetRef="ServiceReg" />
-    <bpmn:startEvent id="StartEvent" name="Очередь пациентов в больнице" camunda:formRef="registration" camunda:formRefBinding="latest">
+    <bpmn:startEvent id="StartEvent" name="Очередь пациентов в больнице" camunda:formRef="Register" camunda:formRefBinding="latest">
       <bpmn:extensionElements />
       <bpmn:outgoing>SequenceFlow_1fp17al</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:endEvent id="EndEvent" name="Процедура лечения пройдена">
-      <bpmn:extensionElements />
-      <bpmn:incoming>Flow_1ToAnalyse</bpmn:incoming>
-    </bpmn:endEvent>
     <bpmn:serviceTask id="ServiceReg" name="Регистратура" camunda:type="external" camunda:topic="ServiceReg">
       <bpmn:extensionElements>
         <camunda:inputOutput>
-          <camunda:inputParameter name="name" />
-          <camunda:inputParameter name="lastname" />
-          <camunda:inputParameter name="age" />
-          <camunda:inputParameter name="status" />
-          <camunda:inputParameter name="id" />
-          <camunda:outputParameter name="name" />
-          <camunda:outputParameter name="lastname" />
-          <camunda:outputParameter name="age" />
-          <camunda:outputParameter name="status" />
-          <camunda:outputParameter name="id" />
-          <camunda:outputParameter name="doctor_id" />
+          <camunda:inputParameter name="formName">${ name }</camunda:inputParameter>
+          <camunda:inputParameter name="formlastname">${ lastname }</camunda:inputParameter>
+          <camunda:inputParameter name="formage">${ age }</camunda:inputParameter>
+          <camunda:inputParameter name="formstatus">${ status}</camunda:inputParameter>
+          <camunda:inputParameter name="formid">${ id }</camunda:inputParameter>
+          <camunda:outputParameter name="Outname">${ name }</camunda:outputParameter>
+          <camunda:outputParameter name="Outlastname">${ lastname }</camunda:outputParameter>
+          <camunda:outputParameter name="Outage">${ age }</camunda:outputParameter>
+          <camunda:outputParameter name="status">${status }</camunda:outputParameter>
+          <camunda:outputParameter name="Outdoctor_id">${ docid }</camunda:outputParameter>
         </camunda:inputOutput>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1fp17al</bpmn:incoming>
       <bpmn:outgoing>Flow_1fz4k1k</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:exclusiveGateway id="GatewayPatientStatus_1" name="Выдано направление к доктору?">
-      <bpmn:incoming>Flow_1fz4k1k</bpmn:incoming>
-      <bpmn:outgoing>Flow_1ToDoc</bpmn:outgoing>
-      <bpmn:outgoing>Flow_1qrqoyb</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
     <bpmn:serviceTask id="ServiceDoc" name="Доктор" camunda:type="external" camunda:topic="ServiceDoc">
       <bpmn:extensionElements>
         <camunda:inputOutput>
-          <camunda:inputParameter name="name" />
-          <camunda:inputParameter name="lastname" />
-          <camunda:inputParameter name="age" />
+          <camunda:inputParameter name="Inname">${ name }</camunda:inputParameter>
+          <camunda:inputParameter name="Inlastname">${ lastname }</camunda:inputParameter>
+          <camunda:inputParameter name="Inage">${ age }</camunda:inputParameter>
+          <camunda:inputParameter name="Indoctor_id">${ docid }</camunda:inputParameter>
         </camunda:inputOutput>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_1ToDoc</bpmn:incoming>
       <bpmn:outgoing>Flow_0pdlxex</bpmn:outgoing>
     </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1fz4k1k" sourceRef="ServiceReg" targetRef="GatewayPatientStatus_1" />
+    <bpmn:exclusiveGateway id="GatewayPatientStatus_1" name="Выдано направление к доктору?">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_1fz4k1k</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ToDoc</bpmn:outgoing>
+      <bpmn:outgoing>Flow_1qrqoyb</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
     <bpmn:sequenceFlow id="Flow_1ToDoc" name="ДА" sourceRef="GatewayPatientStatus_1" targetRef="ServiceDoc">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">status = "RECEIVED_REFERRAL"</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${status == "RECEIVED_REFERRAL"}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:endEvent id="Event_0numtsg" name="Процедура лечения пройдена">
+      <bpmn:incoming>Flow_0pdlxex</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0pdlxex" sourceRef="ServiceDoc" targetRef="Event_0numtsg" />
+    <bpmn:endEvent id="EndEvent" name="Процедура лечения пройдена">
+      <bpmn:extensionElements />
+      <bpmn:incoming>Flow_1ToAnalyse</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1qrqoyb" name="Нет" sourceRef="GatewayPatientStatus_1" targetRef="GatewayPatientStatus_2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${status != "RECEIVED_REFERRAL"}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:exclusiveGateway id="GatewayPatientStatus_2" name="Выдано направление на анализы ?">
       <bpmn:incoming>Flow_1qrqoyb</bpmn:incoming>
-      <bpmn:outgoing>Flow_2ToAnalyse</bpmn:outgoing>
       <bpmn:outgoing>Flow_1ToAnalyse</bpmn:outgoing>
+      <bpmn:outgoing>Flow_2ToAnalyse</bpmn:outgoing>
     </bpmn:exclusiveGateway>
-    <bpmn:sequenceFlow id="Flow_1qrqoyb" name="Нет" sourceRef="GatewayPatientStatus_1" targetRef="GatewayPatientStatus_2">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">status != "RECEIVED_REFERRAL"</bpmn:conditionExpression>
+    <bpmn:sequenceFlow id="Flow_1ToAnalyse" name="Нет" sourceRef="GatewayPatientStatus_2" targetRef="EndEvent">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${status != "VISITED_DOCTOR"}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
     <bpmn:serviceTask id="ServiceLab" name="Лаборатория" camunda:type="external" camunda:topic="ServiceLab">
       <bpmn:extensionElements>
@@ -65,25 +74,22 @@
         </camunda:inputOutput>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_2ToAnalyse</bpmn:incoming>
+      <bpmn:outgoing>Flow_1b6npev</bpmn:outgoing>
     </bpmn:serviceTask>
     <bpmn:sequenceFlow id="Flow_2ToAnalyse" name="Да" sourceRef="GatewayPatientStatus_2" targetRef="ServiceLab">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">status = "VISITED_DOCTOR"</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${status == "VISITED_DOCTOR"}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_1ToAnalyse" name="Нет" sourceRef="GatewayPatientStatus_2" targetRef="EndEvent">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">status != "VISITED_DOCTOR"</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_0pdlxex" sourceRef="ServiceDoc" targetRef="Event_0numtsg" />
-    <bpmn:endEvent id="Event_0numtsg" name="Процедура лечения пройдена">
-      <bpmn:incoming>Flow_0pdlxex</bpmn:incoming>
+    <bpmn:endEvent id="Event_1gqfqnq" name="Процедура лечения пройдена">
+      <bpmn:incoming>Flow_1b6npev</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1fz4k1k" sourceRef="ServiceReg" targetRef="GatewayPatientStatus_1" />
+    <bpmn:sequenceFlow id="Flow_1b6npev" sourceRef="ServiceLab" targetRef="Event_1gqfqnq" />
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Lab5-process">
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent" bioc:stroke="#8e24aa" bioc:fill="#e1bee7" color:background-color="#e1bee7" color:border-color="#8e24aa">
         <dc:Bounds x="172" y="332" width="36" height="36" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="158" y="282" width="64" height="40" />
+          <dc:Bounds x="159" y="282" width="63" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="EndEvent_0x6ir2l_di" bpmnElement="EndEvent" bioc:stroke="#43a047" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#43a047">
@@ -122,6 +128,12 @@
           <dc:Bounds x="656" y="175" width="57" height="40" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1gqfqnq_di" bpmnElement="Event_1gqfqnq" bioc:stroke="#43a047" bioc:fill="#c8e6c9" color:background-color="#c8e6c9" color:border-color="#43a047">
+        <dc:Bounds x="882" y="332" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="875" y="375" width="57" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="SequenceFlow_1fp17al_di" bpmnElement="SequenceFlow_1fp17al">
         <di:waypoint x="208" y="350" />
         <di:waypoint x="250" y="350" />
@@ -145,7 +157,7 @@
         <di:waypoint x="625" y="350" />
         <di:waypoint x="730" y="350" />
         <bpmndi:BPMNLabel>
-          <dc:Bounds x="671" y="332" width="14" height="14" />
+          <dc:Bounds x="672" y="332" width="13" height="14" />
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_0m4nle7_di" bpmnElement="Flow_1ToAnalyse">
@@ -162,6 +174,10 @@
       <bpmndi:BPMNEdge id="Flow_1fz4k1k_di" bpmnElement="Flow_1fz4k1k">
         <di:waypoint x="350" y="350" />
         <di:waypoint x="395" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1b6npev_di" bpmnElement="Flow_1b6npev">
+        <di:waypoint x="830" y="350" />
+        <di:waypoint x="882" y="350" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

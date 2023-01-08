@@ -8,9 +8,12 @@ camunda.bpm.client:
   lock-duration: 10000
   subscriptions:
     ServiceReg:
-      variable-names: name,lastname,age,status
+      variable-names: id, name,lastname,age, status, docid
       process-definition-key: Lab5-process
     ServiceDoc:
+      variable-name: name,lastname,age, docid
+      process-definition-key: Lab5-process
+    ServiceLab:
       variable-name: name,lastname,age
       process-definition-key: Lab5-process
 

@@ -1,14 +1,17 @@
 package ru.core.services;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import ru.core.base.Doctor;
+import ru.core.base.Health;
 import ru.core.base.Patient;
+import ru.core.base.Statistic;
 
+import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @RestController(value = "/doctor")
 public class DoctorController {
@@ -23,13 +26,40 @@ public class DoctorController {
         DoctorList.add(new Doctor(5,"Sergey","Storoshkov","203"));
     }
 
-//    @GetMapping(value = "fetch/{id}")
-//    public Response add(@RequestBody Patient patient) {
-//        for(Patient pat:LocalList) {
-//            if(pat.getId() == patient.getId())
-//        }
-//        return Response.ok().build();
-//    }
+    @PostMapping(value = "addtoDoc")
+    public Response add(@RequestBody Patient patient) {
+        LocalList.add(patient);
+        return Response.ok().build();
+    }
 
+    /**
+     * Список пациентов, которые были на приеме у докторов
+     * @return
+     */
+    @GetMapping(value = "Doc/list")
+    public @ResponseBody Response list() {
+        GenericEntity<List<Patient>> entity = new GenericEntity<List<Patient>>(LocalList) {};
+        return Response.ok(entity).build();
+    }
+
+    private static final Random rnd = new Random(System.currentTimeMillis());
+
+    /**
+     * прием врача
+     * @param id номер врача по записи
+     * @param patient сам пациент (имя, фамилия, возраст, номер врача)
+     * @return
+     */
+    @PostMapping(value = "Doc/{id}")
+    public @ResponseBody Response appointmentDoctor(@PathVariable String id, @RequestBody Patient patient) {
+        if(Integer.parseInt(id) != patient.getId()) { Response.status(201).entity("ERR").build(); }
+        double index = rnd.nextDouble();
+        if(index > 0.7) patient.setHealth(Health.GOOD);
+        else patient.setHealth(Health.BAD);
+        LocalList.add(patient);
+
+        if(patient.getHealth() == Health.GOOD) return Response.ok("GOOD").build();
+        else return Response.ok("BAD").build();
+    }
 
 }
