@@ -1,12 +1,10 @@
 package ru.core.base;
-
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
+
+/**
+ * @// FIXME: 16.01.2023
+ */
 public enum Statistic implements Serializable {
     NULL("NULL"),
     ABORTED("ABORTED"),

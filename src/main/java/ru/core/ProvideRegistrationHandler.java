@@ -50,14 +50,13 @@ public class ProvideRegistrationHandler implements ExternalTaskHandler {
             String name = externalTask.getVariable("name");
             String lastname = externalTask.getVariable("lastname");
             int age = externalTask.getVariable("age");
-            Statistic statistic = Statistic.NULL;
-            statistic.convert(externalTask.getVariable("status"));
+            String statistic = externalTask.getVariable("status");
 
             final ObjectNode root = mapper.createObjectNode();
             root.put("name",name);
             root.put("lastname", lastname);
             root.put("age", age);
-            root.put("statistic", statistic.toString());
+            root.put("status", statistic);
             root.put("health", "NULL");
             root.put("id", "-1");
             root.put("doctor_id", "-1");
@@ -69,7 +68,7 @@ public class ProvideRegistrationHandler implements ExternalTaskHandler {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             try {
-                HttpEntity<String> entity = new HttpEntity<>(mapper.writeValueAsString(root),headers);
+                HttpEntity<String> entity = new HttpEntity<String>(mapper.writeValueAsString(root),headers);
                 String result = new RestTemplate().postForObject("http://localhost:8080/register",
                         entity, String.class);
 
@@ -92,7 +91,7 @@ public class ProvideRegistrationHandler implements ExternalTaskHandler {
 
         // попытка запись к доктору если не был
         assert patient != null;
-        if(patient.getStatus() == Statistic.REGISTERED) {
+        if(patient.getStatus().equals("REGISTERED")) {
             final ObjectMapper DocMapper = new ObjectMapper();
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -109,14 +108,15 @@ public class ProvideRegistrationHandler implements ExternalTaskHandler {
             }
         }
         // попытка записи в лабораторию
-        else if(patient.getStatus() == Statistic.RECEIVED_REFERRAL) {
+        else if(patient.getStatus().equals("VISITED_DOCTOR")) {
             final ObjectMapper LabMapper = new ObjectMapper();
+
             HttpHeaders header = new HttpHeaders();
             header.setContentType(MediaType.APPLICATION_JSON);
 
             try {
                 HttpEntity<String> entity = new HttpEntity<>(LabMapper.writeValueAsString(id),header);
-                String result = new RestTemplate().postForObject("http:localhost:8080/appointmentLab", entity, String.class);
+                String result = new RestTemplate().postForObject("http://localhost:8080/appointmentLab", entity, String.class);
 
                 JsonNode answer = LabMapper.readTree(result);
                 String st = answer.get("entity").asText("-1");
@@ -138,7 +138,7 @@ public class ProvideRegistrationHandler implements ExternalTaskHandler {
         resultSet.put("lastname", patient.getLastname());
         resultSet.put("age", patient.getAge());
         resultSet.put("docid", String.valueOf(patient.getDoctor_id()));
-        resultSet.put("status", "RECEIVED_REFERRAL");
+        resultSet.put("status", patient.getStatus());
         Logger.getLogger("ServiceReg").log(Level.INFO, "[Registration] Current patient was processed");
         externalTaskService.complete(externalTask, resultSet);
     }

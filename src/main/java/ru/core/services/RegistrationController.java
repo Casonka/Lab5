@@ -43,8 +43,8 @@ public class RegistrationController {
             RegistrationList.get(result.getId()).setStatus(input.getStatus());
             return Response.ok(result.getId()).build();
         }
-        input.setId(RegistrationList.size() + 1);
-        input.setStatus(Statistic.REGISTERED);
+        input.setId(RegistrationList.size());
+        input.setStatus("REGISTERED");
         RegistrationList.add(input);
         return Response.ok(input.getId()).build();
     }
@@ -57,13 +57,12 @@ public class RegistrationController {
     @GetMapping(value = "/fetch/{id}", produces = MediaType.APPLICATION_JSON)
     public @ResponseBody ResponseEntity<Patient> FetchPatient(@PathVariable String id) {
         int number = Integer.parseInt(id);
-            return new ResponseEntity<Patient>(RegistrationList.get(number - 1), HttpStatus.OK);
+            return new ResponseEntity<Patient>(RegistrationList.get(number), HttpStatus.OK);
     }
 
     @PostMapping(value = "/appointmentLab")
     public Response AppointmentPatientToLab(@RequestBody int id) {
-        if(RegistrationList.get(id).getStatus() == Statistic.VISITED_DOCTOR && RegistrationList.get(id).getHealth() == Health.BAD) {
-            RegistrationList.get(id).setStatus(Statistic.RECEIVED_REFERRAL);
+        if(RegistrationList.get(id).getStatus().equals("VISITED_DOCTOR")) {
             return Response.ok(id).build();
         } else return Response.status(201).entity(-1).build();
     }
@@ -71,11 +70,11 @@ public class RegistrationController {
     @PostMapping(value = "/appointmentDoc", consumes = MediaType.APPLICATION_JSON, produces = MediaType.APPLICATION_JSON)
     public Response AppointmentPatientToDoc(@RequestBody String id) {
         try {
-            int ide = Integer.parseInt(id) - 1;
+            int ide = Integer.parseInt(id);
             /**
              * Проверка статуса пациента перед записью
              */
-            if(RegistrationList.get(ide).getStatus() == Statistic.REGISTERED) {
+            if(RegistrationList.get(ide).getStatus().equals("REGISTERED")) {
                 // нужно направление к доктору
                 if (RegistrationList.get(ide).getDoctor_id() != -1) {
                     return Response.ok(RegistrationList.get(ide).getDoctor_id()).build();
@@ -90,7 +89,7 @@ public class RegistrationController {
                 }
                 RegistrationList.get(ide).setDoctor_id(identificator);
                 return Response.ok(String.valueOf(identificator)).build();
-            } else {RegistrationList.get(ide).setStatus(Statistic.ABORTED);return Response.status(201).entity("-1").build();}
+            } else {RegistrationList.get(ide).setStatus("ABORTED");return Response.status(201).entity("-1").build();}
         } catch(NullPointerException | NullValueException e) {return Response.status(201).entity("-1").build();}
     }
 

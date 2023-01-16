@@ -1,9 +1,8 @@
 package ru.core.services;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import ru.core.base.Analyse;
 import ru.core.base.Health;
 import ru.core.base.Patient;
@@ -23,10 +22,9 @@ public class LaboratoryController {
      * Список обработанных анализов
      * @return
      */
-    @GetMapping(value = "/lab/list")
-    public Response getAnalyses() {
-        GenericEntity<List<Analyse>> entity = new GenericEntity<List<Analyse>>(AnalyseList) {};
-        return Response.ok(entity).build();
+    @GetMapping(value = "/lab/fetch/{id}")
+    public @ResponseBody ResponseEntity<Analyse> getAnalyses(@PathVariable String id) {
+        return new ResponseEntity<Analyse>(AnalyseList.get(Integer.parseInt(id)), HttpStatus.OK);
     }
 
     /**
@@ -42,11 +40,11 @@ public class LaboratoryController {
 
         Analyse analyse = new Analyse();
         analyse.setK_a(K_a);
-        analyse.setK_a(K_b);
-        analyse.setK_a(K_c);
+        analyse.setK_b(K_b);
+        analyse.setK_c(K_c);
 
         AnalyseList.add(analyse);
-        return Response.ok("OK").build();
+        return Response.ok(AnalyseList.size()).build();
     }
 
     /**
